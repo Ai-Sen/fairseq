@@ -17,26 +17,21 @@
     tar -xzf RoBERTa.tar.gz -C RoBERTa
     ```
 
-2. 使用 Python 而不激活或修复前缀。大多数 Python 库可以正常工作，但需要处理前缀的部分将失败：
 
-    ```shell
-    ./RoBERTa/bin/python
-    ```
-
-3. 激活环境，同时这步操作会将路径 `RoBERTa/bin` 添加到环境变量 path：
+2. 激活环境，同时这步操作会将路径 `RoBERTa/bin` 添加到环境变量 path：
 
     ```shell
     source RoBERTa/bin/activate
     ```
 
-4. 在环境中运行 Python，确认版本无误后请进入预训练部分：
+3. 在环境中运行 Python，确认版本无误后请进入预训练部分：
 
     ```shell
     (RoBERTa) $ python
    Python 3.9.18 (main, Sep 11 2023, 13:41:44)
     ```
    
-5. **之后的全部代码运行完成后**，停用环境以将其从环境变量 path 中删除
+4. **之后的全部代码运行完成后**，停用环境以将其从环境变量 path 中删除
    ```shell
    (RoBERTa) $ source RoBERTa/bin/deactivate
    ```
