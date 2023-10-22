@@ -7,7 +7,9 @@
 2. 示例数据集下载：https://pan.seu.edu.cn:443/link/8D2B0CC3B6B3E4AC825250123BAF0745
 有效期限：2028-10-18
 访问密码：IEea
-3. 下载完成后请**直接**放置在当前文件夹，使用`pwd`命令查看当前目录，应该为`../../../fairseq/`
+3. HuggingFace相关：
+
+4. 下载完成后请**直接**放置在当前文件夹，使用`pwd`命令查看当前目录，应该为`../../../fairseq/`
 ## conda 环境解压
 
 1. 创建目录 `RoBERTa`，并将环境解压至该目录：
@@ -100,6 +102,9 @@ fairseq-hydra-train -m --config-dir examples/roberta/config/finetuning --config-
 ```bash
 find . -type f -name "*.pt"
 ```
-
+## PT文件转为标准HuggingFace
+```bash
+python convert_roberta_original_pytorch_checkpoint_to_pytorch.py --roberta_checkpoint_path /root/as/fairseq/multirun/2023-10-21/14-00-33/0/checkpoints/  --pytorch_dump_folder_path ~/as/
+```
 ## REF
 >Ott, M., Edunov, S., Baevski, A., Fan, A., Gross, S., Ng, N., Grangier, D., & Auli, M. (2019). fairseq: A Fast, Extensible Toolkit for Sequence Modeling. Proceedings of NAACL-HLT 2019: Demonstrations.
