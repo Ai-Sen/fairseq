@@ -99,8 +99,8 @@ fairseq-hydra-train -m --config-dir examples/roberta/config/finetuning --config-
 ```bash
 find . -type f -name "*.pt"
 mkdir pt
-mv checkpoint_best.pt文件的路径 ./pt/model.pt
-mv ./gpt2_bpe/dict.txt ./pt/
+cp checkpoint_best.pt文件的路径 ./pt/model.pt
+cp ./gpt2_bpe/dict.txt ./pt/
 ```
 
 ```bash
