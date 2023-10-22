@@ -7,7 +7,9 @@
 2. 示例数据集下载：https://pan.seu.edu.cn:443/link/8D2B0CC3B6B3E4AC825250123BAF0745
 有效期限：2028-10-18
 访问密码：IEea
-3. HuggingFace相关：
+3. HuggingFace相关：https://pan.seu.edu.cn:443/link/3D80A0FFBB56DB0AC396666DC37112FD
+有效期限：2028-10-20
+访问密码：LngL
 
 4. 下载完成后请**直接**放置在当前文件夹，使用`pwd`命令查看当前目录，应该为`../../../fairseq/`
 ## conda 环境解压
