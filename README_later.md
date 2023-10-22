@@ -4,15 +4,14 @@
 1. conda package下载：https://pan.seu.edu.cn:443/link/DD2C607645BDFE29F170E4A45CC0412A
 有效期限：2028-10-19
 访问密码：Q8rz
-2. 已训练好的`model.pt`下载：https://pan.seu.edu.cn:443/link/A283F7808F10ECFA1F1752D4C22FDD66
-有效期限：2028-10-20
-访问密码：X2d8
-3. HuggingFace相关（暂时不用）：https://pan.seu.edu.cn:443/link/3D80A0FFBB56DB0AC396666DC37112FD
+2. 示例数据集下载：https://pan.seu.edu.cn:443/link/8D2B0CC3B6B3E4AC825250123BAF0745
+有效期限：2028-10-18
+访问密码：IEea
+3. HuggingFace相关：https://pan.seu.edu.cn:443/link/3D80A0FFBB56DB0AC396666DC37112FD
 有效期限：2028-10-20
 访问密码：LngL
 
-4. 下载完成后请**直接**放置在当前文件夹，使用`pwd`命令查看当前目录，应该为`../../../fairseq/`，`RoBERTa.tar.gz`和`model.pt`在当前目录下
-![文件位置](./文件位置.png)
+4. 下载完成后请**直接**放置在当前文件夹，使用`pwd`命令查看当前目录，应该为`../../../fairseq/`
 ## conda 环境解压
 
 1. 创建目录 `RoBERTa`，并将环境解压至该目录：
@@ -40,22 +39,18 @@
    ```shell
    (RoBERTa) $ source RoBERTa/bin/deactivate
    ```
-## 微调
+## 预训练
 ### 1.  预处理数据
 
 数据应该按照语言建模格式进行预处理，即每个文档之间应该用空行分隔（只在使用 --sample-break-mode complete_doc 时有用）。在训练期间，这些行将被连接成一个一维文本流。
 
-#### 首先分割数据集
+这里使用 WikiText-103 数据集来演示如何使用 GPT-2 BPE 预处理原始文本数据。
+
+#### 首先移动并解压数据集
    ```bash
-   cd src
-  python split_data.py
-   ```
-请注意修改`split_data.py`文件中的`txt_files`参数为所有数据文件组成的列表
-然后将所有数据移至当前目录的`mydata`文件夹中
-   ```bash
-  mv data.train.raw ./mydata/
-  mv data.test.raw ./mydata/
-  mv data.valid.raw ./mydata/
+  mv wikitext-103-raw-v1.zip ./src
+  cd src
+  unzip wikitext-103-raw-v1.zip
    ```
 ####  使用 GPT-2 BPE 进行编码
 ```bash
@@ -63,8 +58,8 @@ for SPLIT in train valid test; do \
     python -m examples.roberta.multiprocessing_bpe_encoder \
         --encoder-json gpt2_bpe/encoder.json \
         --vocab-bpe gpt2_bpe/vocab.bpe \
-        --inputs mydata/data.${SPLIT}.raw \
-        --outputs mydata/data.${SPLIT}.bpe \
+        --inputs wikitext-103-raw/wiki.${SPLIT}.raw \
+        --outputs wikitext-103-raw/wiki.${SPLIT}.bpe \
         --keep-empty \
         --workers 60; \
 done
@@ -76,36 +71,42 @@ done
 fairseq-preprocess \
     --only-source \
     --srcdict gpt2_bpe/dict.txt \
-    --trainpref mydata/data.train.bpe \
-    --validpref mydata/data.valid.bpe \
-    --testpref mydata/data.test.bpe \
-    --destdir data-bin/mydata \
+    --trainpref wikitext-103-raw/wiki.train.bpe \
+    --validpref wikitext-103-raw/wiki.valid.bpe \
+    --testpref wikitext-103-raw/wiki.test.bpe \
+    --destdir data-bin/wikitext-103 \
     --workers 60
 ```
 此处`trainpref` `validpref` `testpref`和`destdir`参数注意更改，与上一步同理
-### 2.  在特定数据集上微调
+### 2. 预训练模型
 这里指定`DATA_DIR`相对路径可能会出问题，建议使用绝对路径，注意更改`DATA_DIR`
 ```bash
-DATA_DIR=data-bin/mydata
+DATA_DIR=data-bin/wikitext-103
+
+fairseq-hydra-train -m --config-dir examples/roberta/config/pretraining \
+--config-name base task.data=$DATA_DIR
 ```
+### 3. 加载预训练模型
+```python
+from fairseq.models.roberta import RobertaModel
+roberta = RobertaModel.from_pretrained('checkpoints', 'checkpoint_best.pt', 'path/to/data')
+assert isinstance(roberta.model, torch.nn.Module)
+```
+
+### 4. 在特定数据集上微调
 `finetune`的`config`放在了`src/examples/roberta/config/finetuning/finetune.yaml`,请根据实际情况调整参数，需要注意的是`src/examples/roberta/config/finetuning/finetune.yaml`的`max_update`参数必须大于`src/examples/roberta/config/pretraining/base.yaml`中的该参数
 ```bash
-mv ../model.pt ./
-fairseq-hydra-train -m --config-dir examples/roberta/config/finetuning --config-name finetune task.data=$DATA_DIR  checkpoint.restore_file=./model.pt
+fairseq-hydra-train -m --config-dir examples/roberta/config/finetuning --config-name finetune task.data=/root/as/fairseq/data-bin/wikitext-103/  checkpoint.restore_file=/root/as/fairseq/multirun/2023-10-16/16-23-55/0/checkpoints/checkpoint_last.pt
 ```
+`checkpoint.restore_file`的参数请使用以下命令找到该路径并替换，即找到预训练后的模型权重
 
-## PT文件转为标准HuggingFace
-首先通过以下命令找到`checkpoint_best.pt`文件
+请注意更改`task.data`的参数，根据上述**预处理数据**步骤对特定数据进行处理后保存的路径
 ```bash
 find . -type f -name "*.pt"
-mkdir pt
-mv checkpoint_best.pt文件的路径 ./pt/model.pt
-mv ./gpt2_bpe/dict.txt ./pt/
 ```
-
+## PT文件转为标准HuggingFace
 ```bash
-python convert_roberta_original_pytorch_checkpoint_to_pytorch.py --roberta_checkpoint_path ./pt/  --pytorch_dump_folder_path ./
+python convert_roberta_original_pytorch_checkpoint_to_pytorch.py --roberta_checkpoint_path /root/as/fairseq/multirun/2023-10-21/14-00-33/0/checkpoints/  --pytorch_dump_folder_path ~/as/
 ```
-当前目录新生成的`pytorch_model.bin`和`config.json`即为目标文件
 ## REF
 >Ott, M., Edunov, S., Baevski, A., Fan, A., Gross, S., Ng, N., Grangier, D., & Auli, M. (2019). fairseq: A Fast, Extensible Toolkit for Sequence Modeling. Proceedings of NAACL-HLT 2019: Demonstrations.
