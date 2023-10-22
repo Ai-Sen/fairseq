@@ -98,6 +98,9 @@ fairseq-hydra-train -m --config-dir examples/roberta/config/finetuning --config-
 首先通过以下命令找到`checkpoint_best.pt`文件
 ```bash
 find . -type f -name "*.pt"
+```
+移动到一个文件夹pt里
+```bash
 mkdir pt
 cp checkpoint_best.pt文件的路径 ./pt/model.pt
 cp ./gpt2_bpe/dict.txt ./pt/
